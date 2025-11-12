@@ -49,3 +49,4 @@ Simple search bar for finding bookmarks by title or note content. Optional tag-b
 Modular tagging system that can be turned on/off through a feature flag without breaking the app’s structure.
 
 ## Installation Instructions
+
