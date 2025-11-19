@@ -8,13 +8,13 @@ export const requireAuth = (req, res, next) => {
     ?.split('=')[1]
   
   if (!sessionId) {
-    return res.status(401).json({ error: '未登录' })
+    return res.status(401).json({ error: 'Not logged in' })
   }
   
   const session = getSession(sessionId)
   
   if (!session) {
-    return res.status(401).json({ error: '会话已过期，请重新登录' })
+    return res.status(401).json({ error: 'Session expired, please login again' })
   }
   
   // 将 userId 挂载到 req 对象上

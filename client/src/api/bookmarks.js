@@ -109,6 +109,23 @@ export const getReviewToday = async () => {
   return await response.json()
 }
 
+// 获取指定日期范围内的复习书签
+export const getReviewByDateRange = async (startDate, endDate) => {
+  const url = new URL(`${API_BASE_URL}/bookmarks/review/range`)
+  url.searchParams.append('startDate', startDate)
+  url.searchParams.append('endDate', endDate)
+  
+  const response = await fetch(url, {
+    credentials: 'include',
+  })
+  
+  if (!response.ok) {
+    throw new Error('获取日期范围复习列表失败')
+  }
+  
+  return await response.json()
+}
+
 // 标记为已复习
 export const markAsReviewed = async (id) => {
   const response = await fetch(`${API_BASE_URL}/bookmarks/${id}/mark-reviewed`, {

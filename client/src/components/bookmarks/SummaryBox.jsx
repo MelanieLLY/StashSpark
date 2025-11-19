@@ -10,7 +10,7 @@ const SummaryBox = ({ bookmark, onUpdate }) => {
       const updated = await bookmarksApi.generateSummary(bookmark.id)
       onUpdate(updated)
     } catch (error) {
-      console.error('生成摘要失败:', error)
+      console.error('Failed to generate summary:', error)
     } finally {
       setLoading(false)
     }
@@ -18,26 +18,26 @@ const SummaryBox = ({ bookmark, onUpdate }) => {
 
   return (
     <div>
-      <h4 className="font-medium text-gray-900 mb-2">🤖 AI 摘要</h4>
+      <h4 className="font-medium text-gray-900 mb-2">🤖 AI Summary</h4>
       
       {bookmark.ai_summary ? (
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <p className="text-gray-700 whitespace-pre-wrap">{bookmark.ai_summary}</p>
+        <div className="bg-purple-100/50 backdrop-blur-sm p-4 rounded-lg border border-purple-200/50">
+          <p className="text-gray-800 whitespace-pre-wrap">{bookmark.ai_summary}</p>
           <button
             onClick={handleGenerateSummary}
             disabled={loading}
-            className="mt-3 text-sm text-purple-600 hover:underline disabled:opacity-50"
+            className="mt-3 text-sm text-purple-700 hover:underline disabled:opacity-50 font-medium"
           >
-            {loading ? '重新生成中...' : '重新生成'}
+            {loading ? 'Regenerating...' : 'Regenerate'}
           </button>
         </div>
       ) : (
         <button
           onClick={handleGenerateSummary}
           disabled={loading}
-          className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+          className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50 shadow-sm"
         >
-          {loading ? '生成中...' : '✨ 生成 AI 摘要'}
+          {loading ? 'Generating...' : '✨ Generate AI Summary'}
         </button>
       )}
     </div>

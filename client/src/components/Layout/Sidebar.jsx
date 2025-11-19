@@ -6,48 +6,48 @@ const Sidebar = () => {
   const location = useLocation()
 
   const isActive = (path) => {
-    return location.pathname === path ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+    return location.pathname === path
   }
 
   const handleLogout = async () => {
     try {
       await logoutUser()
     } catch (error) {
-      console.error('登出失败:', error)
+      console.error('Logout failed:', error)
     }
   }
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-64 glass flex flex-col shadow-lg">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-white/30">
         <h1 className="text-2xl font-bold text-gray-900">✨ StashSpark</h1>
-        <p className="text-sm text-gray-500 mt-1">{user?.email}</p>
+        <p className="text-sm text-gray-600 mt-1">{user?.email}</p>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         <Link
           to="/app"
-          className={`block px-4 py-3 rounded-lg font-medium transition ${isActive('/app')}`}
+          className={`block px-4 py-3 rounded-lg font-medium transition ${isActive('/app') ? 'bg-warm-blue-300/50 text-warm-blue-800 shadow-sm' : 'text-gray-700 hover:bg-white/40'}`}
         >
-          📚 所有书签
+          📚 All Bookmarks
         </Link>
         <Link
           to="/app/review"
-          className={`block px-4 py-3 rounded-lg font-medium transition ${isActive('/app/review')}`}
+          className={`block px-4 py-3 rounded-lg font-medium transition ${isActive('/app/review') ? 'bg-warm-blue-300/50 text-warm-blue-800 shadow-sm' : 'text-gray-700 hover:bg-white/40'}`}
         >
-          📅 今日复习
+          📅 Revisit Today
         </Link>
       </nav>
 
       {/* User Actions */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-white/30">
         <button
           onClick={handleLogout}
-          className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded-lg transition"
+          className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50/60 rounded-lg transition backdrop-blur-sm"
         >
-          🚪 登出
+          🚪 Logout
         </button>
       </div>
     </aside>

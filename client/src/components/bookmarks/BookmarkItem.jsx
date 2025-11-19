@@ -5,89 +5,135 @@ import SummaryBox from './SummaryBox'
 
 const BookmarkItem = ({ bookmark, onUpdate, onDelete, showReviewButton, onMarkReviewed }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
 
   const handleDelete = async () => {
-    if (window.confirm('确定要删除这个书签吗？')) {
+    if (window.confirm('Are you sure you want to delete this bookmark?')) {
       try {
         await bookmarksApi.deleteBookmark(bookmark.id)
         onDelete(bookmark.id)
       } catch (error) {
-        console.error('删除失败:', error)
+        console.error('Delete failed:', error)
       }
     }
   }
 
   const formatDate = (dateString) => {
     if (!dateString) return ''
-    return new Date(dateString).toLocaleDateString('zh-CN')
+    return new Date(dateString).toLocaleDateString('en-US')
   }
 
+  const needsRevisit = bookmark.next_review_at && new Date(bookmark.next_review_at) <= new Date()
+
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-md transition">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-            {bookmark.title}
-          </h3>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <span>🌐 {bookmark.domain}</span>
-            <span>📅 {formatDate(bookmark.created_at)}</span>
-          </div>
-        </div>
-        
-        <div className="flex gap-2">
+    <div className="glass rounded-xl hover:shadow-lg transition flex flex-col h-full">
+      {/* Header with action buttons */}
+      <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
+        <a
+          href={bookmark.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-700 text-2xl flex-shrink-0"
+          title={bookmark.url}
+        >
+          🌐
+        </a>
+        <div className="flex gap-1 flex-shrink-0">
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition"
+            onClick={() => setIsEditing(!isEditing)}
+            className="p-2 text-warm-blue-700 hover:bg-warm-blue-100/50 backdrop-blur-sm rounded transition"
+            title={isEditing ? 'Cancel' : 'Edit'}
           >
-            {isExpanded ? '收起' : '展开'}
+            {isEditing ? '✖️' : '✏️'}
           </button>
           <button
             onClick={handleDelete}
-            className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition"
+            className="p-2 text-red-600 hover:bg-red-100/50 backdrop-blur-sm rounded transition"
+            title="Delete"
           >
-            删除
+            🗑️
           </button>
         </div>
       </div>
 
-      {/* URL */}
-      <a
-        href={bookmark.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-sm text-blue-600 hover:underline break-all"
-      >
-        {bookmark.url}
-      </a>
+      {/* Title */}
+      <div className="px-4 pb-3">
+        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 break-words">
+          {bookmark.title}
+        </h3>
+      </div>
+      
+      {/* Revisit Badge */}
+      <div className="px-4 pb-3">
+        {needsRevisit && (
+          <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-200/60 backdrop-blur-sm text-orange-800 text-xs rounded-full border border-orange-300/50">
+            <span>🔔</span>
+            <span>Due for revisit</span>
+          </div>
+        )}
+        {bookmark.next_review_at && !needsRevisit && (
+          <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-200/60 backdrop-blur-sm text-green-800 text-xs rounded-full border border-green-300/50">
+            <span>📅</span>
+            <span className="truncate">Next: {formatDate(bookmark.next_review_at)}</span>
+          </div>
+        )}
+      </div>
 
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-          {/* Editor */}
-          <BookmarkEditor
-            bookmark={bookmark}
-            onUpdate={onUpdate}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-          />
+      {/* Content area */}
+      <div className="px-4 pb-4 flex-1">{/* This will push footer to bottom */}
 
-          {/* AI Summary */}
-          <SummaryBox bookmark={bookmark} onUpdate={onUpdate} />
+        {/* AI Summary */}
+        {bookmark.ai_summary && (
+          <div className="mb-3 p-3 bg-purple-100/50 backdrop-blur-sm rounded-lg border border-purple-200/50">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-purple-800 font-medium text-sm">🤖 AI Summary</span>
+            </div>
+            <p className="text-gray-800 text-xs whitespace-pre-wrap line-clamp-4">{bookmark.ai_summary}</p>
+          </div>
+        )}
 
-          {/* Review Button */}
-          {showReviewButton && onMarkReviewed && (
-            <button
-              onClick={() => onMarkReviewed(bookmark.id)}
-              className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-            >
-              ✅ 标记为已复习
-            </button>
-          )}
+        {/* Notes */}
+        {bookmark.notes && !isEditing && (
+          <div className="mb-3 p-3 bg-white/40 backdrop-blur-sm rounded-lg border border-white/50">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-gray-800 font-medium text-sm">📝 Notes</span>
+            </div>
+            <p className="text-gray-800 text-xs whitespace-pre-wrap line-clamp-3">{bookmark.notes}</p>
+          </div>
+        )}
+
+        {/* Editor Mode */}
+        {isEditing && (
+          <div className="space-y-3 mt-3 pt-3 border-t border-white/30">
+            <BookmarkEditor
+              bookmark={bookmark}
+              onUpdate={onUpdate}
+              isEditing={isEditing}
+              setIsEditing={setIsEditing}
+            />
+            
+            {/* AI Summary Generation */}
+            <SummaryBox bookmark={bookmark} onUpdate={onUpdate} />
+          </div>
+        )}
+
+        {/* Revisit Button for Review Page */}
+        {showReviewButton && onMarkReviewed && needsRevisit && (
+          <button
+            onClick={() => onMarkReviewed(bookmark.id)}
+            className="w-full mt-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm shadow-sm"
+          >
+            ✅ Mark as Revisited
+          </button>
+        )}
+      </div>
+
+      {/* Footer Info - Pushed to bottom */}
+      <div className="px-4 pb-3 pt-2 border-t border-white/20 mt-auto">
+        <div className="flex items-center justify-between text-xs text-gray-600">
+          <span className="truncate">{formatDate(bookmark.created_at)}</span>
+          <span className="text-gray-500 truncate ml-2">{bookmark.domain}</span>
         </div>
-      )}
+      </div>
     </div>
   )
 }

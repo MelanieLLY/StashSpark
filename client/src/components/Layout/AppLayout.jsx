@@ -16,7 +16,7 @@ const AppLayout = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">加载中...</div>
+        <div className="text-xl text-gray-800">加载中...</div>
       </div>
     )
   }
@@ -26,7 +26,7 @@ const AppLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-auto">
         <Outlet />

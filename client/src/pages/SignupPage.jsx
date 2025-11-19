@@ -16,12 +16,12 @@ const SignupPage = () => {
     setError('')
 
     if (password !== confirmPassword) {
-      setError('两次输入的密码不一致')
+      setError('Passwords do not match')
       return
     }
 
     if (password.length < 6) {
-      setError('密码至少需要 6 个字符')
+      setError('Password must be at least 6 characters')
       return
     }
 
@@ -38,23 +38,23 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="glass-strong p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">✨ StashSpark</h1>
-          <p className="text-gray-600">创建新账户</p>
+          <p className="text-gray-700">Create a new account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm">
+            <div className="bg-red-100/70 backdrop-blur-sm text-red-800 p-3 rounded-lg text-sm border border-red-200/50">
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              邮箱
+            <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-2">
+              Email
             </label>
             <input
               id="email"
@@ -62,14 +62,14 @@ const SignupPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/40 rounded-lg focus:ring-2 focus:ring-warm-blue-400 focus:border-transparent transition"
               placeholder="your@email.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              密码
+            <label htmlFor="password" className="block text-sm font-medium text-gray-800 mb-2">
+              Password
             </label>
             <input
               id="password"
@@ -77,14 +77,14 @@ const SignupPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="至少 6 个字符"
+              className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/40 rounded-lg focus:ring-2 focus:ring-warm-blue-400 focus:border-transparent transition"
+              placeholder="At least 6 characters"
             />
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              确认密码
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-800 mb-2">
+              Confirm Password
             </label>
             <input
               id="confirmPassword"
@@ -92,24 +92,24 @@ const SignupPage = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="再次输入密码"
+              className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/40 rounded-lg focus:ring-2 focus:ring-warm-blue-400 focus:border-transparent transition"
+              placeholder="Enter password again"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-warm-blue-600 text-white py-2 rounded-lg font-medium hover:bg-warm-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
-            {loading ? '注册中...' : '注册'}
+            {loading ? 'Signing up...' : 'Sign up'}
           </button>
         </form>
 
-        <p className="text-center text-gray-600 mt-6">
-          已有账户？{' '}
-          <Link to="/login" className="text-blue-600 hover:underline font-medium">
-            立即登录
+        <p className="text-center text-gray-700 mt-6">
+          Already have an account?{' '}
+          <Link to="/login" className="text-warm-blue-700 hover:underline font-medium">
+            Login now
           </Link>
         </p>
       </div>

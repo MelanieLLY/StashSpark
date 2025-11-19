@@ -1,4 +1,5 @@
 import { pool } from '../config/database.js'
+import { generateBookmarkSummary } from '../services/aiService.js'
 
 // 提取域名的辅助函数
 const extractDomain = (url) => {
@@ -30,8 +31,8 @@ export const getAllBookmarks = async (req, res) => {
     const result = await pool.query(query, params)
     res.json(result.rows)
   } catch (error) {
-    console.error('获取书签失败:', error)
-    res.status(500).json({ error: '获取书签失败' })
+    console.error('Failed to get bookmarks:', error)
+    res.status(500).json({ error: 'Failed to get bookmarks' })
   }
 }
 
@@ -42,7 +43,7 @@ export const createBookmark = async (req, res) => {
     const userId = req.userId
     
     if (!url) {
-      return res.status(400).json({ error: 'URL 不能为空' })
+      return res.status(400).json({ error: 'URL is required' })
     }
     
     const domain = extractDomain(url)
@@ -52,13 +53,13 @@ export const createBookmark = async (req, res) => {
       `INSERT INTO bookmarks (user_id, url, title, domain, notes)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [userId, url, title || '未命名书签', domain, notes || '']
+      [userId, url, title || 'Untitled Bookmark', domain, notes || '']
     )
     
     res.status(201).json(result.rows[0])
   } catch (error) {
-    console.error('创建书签失败:', error)
-    res.status(500).json({ error: '创建书签失败' })
+    console.error('Failed to create bookmark:', error)
+    res.status(500).json({ error: 'Failed to create bookmark' })
   }
 }
 
@@ -74,13 +75,13 @@ export const getBookmarkById = async (req, res) => {
     )
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: '书签不存在' })
+      return res.status(404).json({ error: 'Bookmark not found' })
     }
     
     res.json(result.rows[0])
   } catch (error) {
-    console.error('获取书签失败:', error)
-    res.status(500).json({ error: '获取书签失败' })
+    console.error('Failed to get bookmark:', error)
+    res.status(500).json({ error: 'Failed to get bookmark' })
   }
 }
 
@@ -114,7 +115,7 @@ export const updateBookmark = async (req, res) => {
     }
     
     if (updates.length === 0) {
-      return res.status(400).json({ error: '没有要更新的字段' })
+      return res.status(400).json({ error: 'No fields to update' })
     }
     
     values.push(id, userId)
@@ -128,13 +129,13 @@ export const updateBookmark = async (req, res) => {
     )
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: '书签不存在' })
+      return res.status(404).json({ error: 'Bookmark not found' })
     }
     
     res.json(result.rows[0])
   } catch (error) {
-    console.error('更新书签失败:', error)
-    res.status(500).json({ error: '更新书签失败' })
+    console.error('Failed to update bookmark:', error)
+    res.status(500).json({ error: 'Failed to update bookmark' })
   }
 }
 
@@ -150,17 +151,17 @@ export const deleteBookmark = async (req, res) => {
     )
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: '书签不存在' })
+      return res.status(404).json({ error: 'Bookmark not found' })
     }
     
-    res.json({ message: '书签已删除' })
+    res.json({ message: 'Bookmark deleted successfully' })
   } catch (error) {
-    console.error('删除书签失败:', error)
-    res.status(500).json({ error: '删除书签失败' })
+    console.error('Failed to delete bookmark:', error)
+    res.status(500).json({ error: 'Failed to delete bookmark' })
   }
 }
 
-// 生成 AI 摘要（目前使用 mock 数据）
+// 生成 AI 摘要（使用 OpenAI API）
 export const generateSummary = async (req, res) => {
   try {
     const { id } = req.params
@@ -173,26 +174,30 @@ export const generateSummary = async (req, res) => {
     )
     
     if (checkResult.rows.length === 0) {
-      return res.status(404).json({ error: '书签不存在' })
+      return res.status(404).json({ error: 'Bookmark not found' })
     }
     
-    // TODO: 接入真实的 AI API
-    // 目前使用 mock 摘要
-    const mockSummary = `这是一个自动生成的摘要示例。在实际应用中，这里会调用 AI API（如 OpenAI、Claude 等）来分析网页内容并生成真实的摘要。\n\n主要内容：\n- 要点 1\n- 要点 2\n- 要点 3`
+    const bookmark = checkResult.rows[0]
     
+    // Call AI service to generate summary
+    console.log(`🤖 Generating AI summary for bookmark "${bookmark.title}"...`)
+    const aiSummary = await generateBookmarkSummary(bookmark)
+    console.log(`✅ Summary generation complete!`)
+    
+    // Update database
     const result = await pool.query(
       'UPDATE bookmarks SET ai_summary = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
-      [mockSummary, id, userId]
+      [aiSummary, id, userId]
     )
     
     res.json(result.rows[0])
   } catch (error) {
-    console.error('生成摘要失败:', error)
-    res.status(500).json({ error: '生成摘要失败' })
+    console.error('Failed to generate summary:', error)
+    res.status(500).json({ error: 'Failed to generate summary' })
   }
 }
 
-// 获取今日需要复习的书签
+// Get bookmarks that need to be revisited today
 export const getReviewToday = async (req, res) => {
   try {
     const userId = req.userId
@@ -208,35 +213,64 @@ export const getReviewToday = async (req, res) => {
     
     res.json(result.rows)
   } catch (error) {
-    console.error('获取复习列表失败:', error)
-    res.status(500).json({ error: '获取复习列表失败' })
+    console.error('Failed to get revisit list:', error)
+    res.status(500).json({ error: 'Failed to get revisit list' })
   }
 }
 
-// 标记已复习
+// Get bookmarks to revisit within a date range (for calendar view)
+export const getReviewByDateRange = async (req, res) => {
+  try {
+    const userId = req.userId
+    const { startDate, endDate } = req.query
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate and endDate parameters are required' })
+    }
+    
+    const result = await pool.query(
+      `SELECT * FROM bookmarks 
+       WHERE user_id = $1 
+       AND next_review_at IS NOT NULL 
+       AND next_review_at >= $2 
+       AND next_review_at < $3
+       ORDER BY next_review_at ASC`,
+      [userId, startDate, endDate]
+    )
+    
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Failed to get revisit list by date range:', error)
+    res.status(500).json({ error: 'Failed to get revisit list by date range' })
+  }
+}
+
+// Mark as revisited
 export const markAsReviewed = async (req, res) => {
   try {
     const { id } = req.params
     const userId = req.userId
     
-    // 获取当前书签信息
+    // Get current bookmark info
     const bookmarkResult = await pool.query(
       'SELECT * FROM bookmarks WHERE id = $1 AND user_id = $2',
       [id, userId]
     )
     
     if (bookmarkResult.rows.length === 0) {
-      return res.status(404).json({ error: '书签不存在' })
+      return res.status(404).json({ error: 'Bookmark not found' })
     }
     
     const bookmark = bookmarkResult.rows[0]
     const intervalDays = bookmark.review_interval_days || 1
     
-    // 计算下次复习时间
+    // Calculate next revisit time
     const nextReviewDate = new Date()
     nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays)
+    // Set to start of day (00:00:00) to avoid timezone issues
+    nextReviewDate.setHours(0, 0, 0, 0)
     
-    // 更新复习信息
+    // Update revisit info
     const result = await pool.query(
       `UPDATE bookmarks 
        SET last_reviewed_at = NOW(),
@@ -248,8 +282,8 @@ export const markAsReviewed = async (req, res) => {
     
     res.json(result.rows[0])
   } catch (error) {
-    console.error('标记复习失败:', error)
-    res.status(500).json({ error: '标记复习失败' })
+    console.error('Failed to mark as revisited:', error)
+    res.status(500).json({ error: 'Failed to mark as revisited' })
   }
 }
 

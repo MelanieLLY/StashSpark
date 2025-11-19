@@ -27,7 +27,7 @@ export const register = async (req, res) => {
     )
     
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: '该邮箱已被注册' })
+      return res.status(400).json({ error: 'This email is already registered' })
     }
     
     // 创建新用户
@@ -49,8 +49,8 @@ export const register = async (req, res) => {
     
     res.status(201).json({ id: user.id, email: user.email })
   } catch (error) {
-    console.error('注册错误:', error)
-    res.status(500).json({ error: '注册失败' })
+    console.error('Registration error:', error)
+    res.status(500).json({ error: 'Registration failed' })
   }
 }
 
@@ -60,24 +60,24 @@ export const login = async (req, res) => {
     const { email, password } = req.body
     
     if (!email || !password) {
-      return res.status(400).json({ error: '邮箱和密码不能为空' })
+      return res.status(400).json({ error: 'Email and password are required' })
     }
     
-    // 查找用户
+    // Find user
     const result = await pool.query(
       'SELECT id, email, password_hash FROM users WHERE email = $1',
       [email]
     )
     
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: '邮箱或密码错误' })
+      return res.status(401).json({ error: 'Invalid email or password' })
     }
     
     const user = result.rows[0]
     
-    // 验证密码
+    // Verify password
     if (!verifyPassword(password, user.password_hash)) {
-      return res.status(401).json({ error: '邮箱或密码错误' })
+      return res.status(401).json({ error: 'Invalid email or password' })
     }
     
     // 创建 session
@@ -90,8 +90,8 @@ export const login = async (req, res) => {
     
     res.json({ id: user.id, email: user.email })
   } catch (error) {
-    console.error('登录错误:', error)
-    res.status(500).json({ error: '登录失败' })
+    console.error('Login error:', error)
+    res.status(500).json({ error: 'Login failed' })
   }
 }
 
@@ -107,7 +107,7 @@ export const logout = (req, res) => {
   }
   
   res.clearCookie('sessionId')
-  res.json({ message: '已登出' })
+  res.json({ message: 'Logged out successfully' })
 }
 
 // 获取当前用户
@@ -119,13 +119,13 @@ export const getCurrentUser = async (req, res) => {
       ?.split('=')[1]
     
     if (!sessionId) {
-      return res.status(401).json({ error: '未登录' })
+      return res.status(401).json({ error: 'Not logged in' })
     }
     
     const session = getSession(sessionId)
     
     if (!session) {
-      return res.status(401).json({ error: '会话已过期' })
+      return res.status(401).json({ error: 'Session expired' })
     }
     
     const result = await pool.query(
@@ -134,13 +134,13 @@ export const getCurrentUser = async (req, res) => {
     )
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: '用户不存在' })
+      return res.status(404).json({ error: 'User not found' })
     }
     
     res.json(result.rows[0])
   } catch (error) {
-    console.error('获取用户信息错误:', error)
-    res.status(500).json({ error: '获取用户信息失败' })
+    console.error('Get user info error:', error)
+    res.status(500).json({ error: 'Failed to get user info' })
   }
 }
 

@@ -11,7 +11,7 @@ const AddBookmarkForm = ({ onBookmarkAdded }) => {
     e.preventDefault()
     
     if (!url) {
-      setError('请输入 URL')
+      setError('Please enter a URL')
       return
     }
 
@@ -35,11 +35,11 @@ const AddBookmarkForm = ({ onBookmarkAdded }) => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">➕ 添加新书签</h2>
+    <div className="glass p-6 rounded-xl shadow-md mb-6">
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">➕ Add New Bookmark</h2>
       
       {error && (
-        <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-lg text-sm">
+        <div className="mb-4 bg-red-100/70 backdrop-blur-sm text-red-800 p-3 rounded-lg text-sm border border-red-200/50">
           {error}
         </div>
       )}
@@ -50,8 +50,8 @@ const AddBookmarkForm = ({ onBookmarkAdded }) => {
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="粘贴 URL..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Paste URL..."
+            className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/40 rounded-lg focus:ring-2 focus:ring-warm-blue-400 focus:border-transparent transition"
             required
           />
         </div>
@@ -61,17 +61,17 @@ const AddBookmarkForm = ({ onBookmarkAdded }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="标题（可选）"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Title (optional)"
+            className="w-full px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/40 rounded-lg focus:ring-2 focus:ring-warm-blue-400 focus:border-transparent transition"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-warm-blue-600 text-white py-2 rounded-lg font-medium hover:bg-warm-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
         >
-          {loading ? '添加中...' : '添加书签'}
+          {loading ? 'Adding...' : 'Add Bookmark'}
         </button>
       </form>
     </div>

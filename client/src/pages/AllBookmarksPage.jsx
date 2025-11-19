@@ -19,7 +19,7 @@ const AllBookmarksPage = () => {
       const data = await bookmarksApi.getAllBookmarks(search)
       setBookmarks(data)
     } catch (err) {
-      setError('加载书签失败')
+      setError('Failed to load bookmarks')
       console.error(err)
     } finally {
       setLoading(false)
@@ -47,42 +47,42 @@ const AllBookmarksPage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-[1920px] mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">我的书签</h1>
-        <p className="text-gray-600">管理和组织你保存的所有内容</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bookmarks</h1>
+        <p className="text-gray-600">Manage and organize all your saved content</p>
       </div>
 
       {/* 添加书签表单 */}
       <AddBookmarkForm onBookmarkAdded={handleBookmarkAdded} />
 
-      {/* 搜索框 */}
+      {/* Search box */}
       <div className="mb-6">
         <input
           type="text"
           value={searchQuery}
           onChange={handleSearch}
-          placeholder="🔍 搜索书签标题、笔记或 URL..."
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="🔍 Search bookmark title, notes, or URL..."
+          className="w-full px-4 py-3 glass border-white/40 rounded-xl focus:ring-2 focus:ring-warm-blue-400 focus:border-transparent shadow-sm"
         />
       </div>
 
       {/* 错误提示 */}
       {error && (
-        <div className="mb-4 bg-red-50 text-red-700 p-4 rounded-lg">
+        <div className="mb-4 bg-red-100/70 backdrop-blur-sm text-red-800 p-4 rounded-xl border border-red-200/50">
           {error}
         </div>
       )}
 
-      {/* 书签列表 */}
+      {/* Bookmark list */}
       {loading ? (
         <div className="text-center py-12">
-          <div className="text-gray-500">加载中...</div>
+          <div className="text-gray-700">Loading...</div>
         </div>
       ) : bookmarks.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500">
-            {searchQuery ? '没有找到匹配的书签' : '还没有书签，快添加第一个吧！'}
+        <div className="text-center py-12 glass rounded-xl shadow-sm">
+          <p className="text-gray-700">
+            {searchQuery ? 'No matching bookmarks found' : 'No bookmarks yet, add your first one!'}
           </p>
         </div>
       ) : (

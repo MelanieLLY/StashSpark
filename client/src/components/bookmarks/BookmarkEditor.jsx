@@ -19,6 +19,8 @@ const BookmarkEditor = ({ bookmark, onUpdate, isEditing, setIsEditing }) => {
       if (reviewInterval > 0) {
         const nextDate = new Date()
         nextDate.setDate(nextDate.getDate() + reviewInterval)
+        // 设置为当天的开始时间（00:00:00），避免时区问题
+        nextDate.setHours(0, 0, 0, 0)
         nextReviewAt = nextDate.toISOString()
       }
 
@@ -31,7 +33,7 @@ const BookmarkEditor = ({ bookmark, onUpdate, isEditing, setIsEditing }) => {
       onUpdate(updated)
       setIsEditing(false)
     } catch (error) {
-      console.error('保存失败:', error)
+      console.error('Save failed:', error)
     } finally {
       setSaving(false)
     }
@@ -40,13 +42,13 @@ const BookmarkEditor = ({ bookmark, onUpdate, isEditing, setIsEditing }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium text-gray-900">📝 笔记</h4>
+        <h4 className="font-medium text-gray-900">📝 Notes</h4>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
             className="text-sm text-blue-600 hover:underline"
           >
-            编辑
+            Edit
           </button>
         )}
       </div>
@@ -56,26 +58,26 @@ const BookmarkEditor = ({ bookmark, onUpdate, isEditing, setIsEditing }) => {
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="在这里记录你的想法..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Write your thoughts here..."
+            className="w-full p-3 bg-white/60 backdrop-blur-sm border border-white/40 rounded-lg focus:ring-2 focus:ring-warm-blue-400 focus:border-transparent transition"
             rows="4"
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              复习间隔
+            <label className="block text-sm font-medium text-gray-800 mb-2">
+              Revisit Interval
             </label>
             <select
               value={reviewInterval}
               onChange={(e) => setReviewInterval(Number(e.target.value))}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 bg-white/60 backdrop-blur-sm border border-white/40 rounded-lg focus:ring-2 focus:ring-warm-blue-400 transition"
             >
-              <option value={0}>不设置复习</option>
-              <option value={1}>1 天后</option>
-              <option value={3}>3 天后</option>
-              <option value={7}>7 天后</option>
-              <option value={14}>14 天后</option>
-              <option value={30}>30 天后</option>
+              <option value={0}>No revisit schedule</option>
+              <option value={1}>After 1 day</option>
+              <option value={3}>After 3 days</option>
+              <option value={7}>After 7 days</option>
+              <option value={14}>After 14 days</option>
+              <option value={30}>After 30 days</option>
             </select>
           </div>
 
@@ -83,9 +85,9 @@ const BookmarkEditor = ({ bookmark, onUpdate, isEditing, setIsEditing }) => {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="px-4 py-2 bg-warm-blue-600 text-white rounded-lg hover:bg-warm-blue-700 transition disabled:opacity-50 shadow-sm"
             >
-              {saving ? '保存中...' : '保存'}
+              {saving ? 'Saving...' : 'Save'}
             </button>
             <button
               onClick={() => {
@@ -93,15 +95,15 @@ const BookmarkEditor = ({ bookmark, onUpdate, isEditing, setIsEditing }) => {
                 setReviewInterval(bookmark.review_interval_days || 0)
                 setIsEditing(false)
               }}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+              className="px-4 py-2 bg-white/50 backdrop-blur-sm text-gray-800 rounded-lg hover:bg-white/70 transition border border-white/40"
             >
-              取消
+              Cancel
             </button>
           </div>
         </div>
       ) : (
         <div className="text-gray-700 whitespace-pre-wrap">
-          {notes || <span className="text-gray-400">暂无笔记</span>}
+          {notes || <span className="text-gray-400">No notes yet</span>}
         </div>
       )}
     </div>
