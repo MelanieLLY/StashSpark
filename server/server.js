@@ -3,6 +3,7 @@ import './config/dotenv.js'
 import cors from 'cors'
 import authRoutes from './routes/authRoutes.js'
 import bookmarkRoutes from './routes/bookmarkRoutes.js'
+import tagRoutes from './routes/tagRoutes.js'
 
 const app = express()
 
@@ -16,6 +17,7 @@ app.use(express.json())
 // 路由
 app.use('/api/auth', authRoutes)
 app.use('/api/bookmarks', bookmarkRoutes)
+app.use('/api/tags', tagRoutes)
 
 // API 文档
 app.get('/', (req, res) => {

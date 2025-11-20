@@ -1,5 +1,6 @@
 import { pool } from '../config/database.js'
 import { generateBookmarkSummary } from '../services/aiService.js'
+import { fetchMetadata, isValidUrl } from '../services/metadataService.js'
 
 // 提取域名的辅助函数
 const extractDomain = (url) => {
@@ -11,7 +12,7 @@ const extractDomain = (url) => {
   }
 }
 
-// 获取所有书签
+// 获取所有书签（包含标签）
 export const getAllBookmarks = async (req, res) => {
   try {
     const { search } = req.query
@@ -29,7 +30,25 @@ export const getAllBookmarks = async (req, res) => {
     query += ' ORDER BY created_at DESC'
     
     const result = await pool.query(query, params)
-    res.json(result.rows)
+    
+    // 为每个书签获取其标签
+    const bookmarksWithTags = await Promise.all(
+      result.rows.map(async (bookmark) => {
+        const tagsResult = await pool.query(
+          `SELECT t.* FROM tags t
+           INNER JOIN bookmark_tags bt ON t.id = bt.tag_id
+           WHERE bt.bookmark_id = $1
+           ORDER BY t.name ASC`,
+          [bookmark.id]
+        )
+        return {
+          ...bookmark,
+          tags: tagsResult.rows
+        }
+      })
+    )
+    
+    res.json(bookmarksWithTags)
   } catch (error) {
     console.error('Failed to get bookmarks:', error)
     res.status(500).json({ error: 'Failed to get bookmarks' })
@@ -39,27 +58,85 @@ export const getAllBookmarks = async (req, res) => {
 // 创建新书签
 export const createBookmark = async (req, res) => {
   try {
-    const { url, title, notes } = req.body
+    let { url, title, notes } = req.body
     const userId = req.userId
     
     if (!url) {
       return res.status(400).json({ error: 'URL is required' })
     }
     
+    // 验证 URL 格式
+    if (!isValidUrl(url)) {
+      return res.status(400).json({ error: 'Invalid URL format' })
+    }
+    
     const domain = extractDomain(url)
     
-    // 插入新书签
+    // 如果没有提供标题，自动抓取网页元数据
+    if (!title || title.trim() === '') {
+      console.log('📖 No title provided, fetching metadata...')
+      const metadata = await fetchMetadata(url)
+      title = metadata.title
+      
+      // 如果也没有提供 notes 且抓取到了描述，使用描述作为初始笔记
+      if ((!notes || notes.trim() === '') && metadata.description) {
+        notes = metadata.description
+      }
+      
+      console.log(`✅ Using fetched title: "${title}"`)
+    }
+    
+    // 计算默认复习时间：3天后
+    const defaultReviewIntervalDays = 3
+    const nextReviewDate = new Date()
+    nextReviewDate.setDate(nextReviewDate.getDate() + defaultReviewIntervalDays)
+    nextReviewDate.setHours(0, 0, 0, 0) // 设置为当天开始时间
+    
+    // 插入新书签（包含复习间隔和下次复习时间）
     const result = await pool.query(
-      `INSERT INTO bookmarks (user_id, url, title, domain, notes)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO bookmarks (user_id, url, title, domain, notes, review_interval_days, next_review_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [userId, url, title || 'Untitled Bookmark', domain, notes || '']
+      [userId, url, title || 'Untitled Bookmark', domain, notes || '', defaultReviewIntervalDays, nextReviewDate]
     )
     
-    res.status(201).json(result.rows[0])
+    const newBookmark = result.rows[0]
+    
+    // 🤖 后台异步生成 AI 摘要（不阻塞响应）
+    console.log(`🚀 Triggering AI summary generation in background for bookmark #${newBookmark.id}...`)
+    generateBookmarkSummaryAsync(newBookmark, userId).catch(err => {
+      console.error(`❌ Failed to generate AI summary for bookmark #${newBookmark.id}:`, err)
+    })
+    
+    // 返回带空标签数组的书签
+    const bookmark = {
+      ...newBookmark,
+      tags: []
+    }
+    
+    res.status(201).json(bookmark)
   } catch (error) {
     console.error('Failed to create bookmark:', error)
     res.status(500).json({ error: 'Failed to create bookmark' })
+  }
+}
+
+// 异步生成 AI 摘要的辅助函数
+const generateBookmarkSummaryAsync = async (bookmark, userId) => {
+  try {
+    console.log(`🤖 Generating AI summary for bookmark "${bookmark.title}"...`)
+    const aiSummary = await generateBookmarkSummary(bookmark)
+    
+    // 更新数据库
+    await pool.query(
+      'UPDATE bookmarks SET ai_summary = $1 WHERE id = $2 AND user_id = $3',
+      [aiSummary, bookmark.id, userId]
+    )
+    
+    console.log(`✅ AI summary generated and saved for bookmark #${bookmark.id}`)
+  } catch (error) {
+    console.error(`❌ Failed to generate AI summary for bookmark #${bookmark.id}:`, error)
+    throw error
   }
 }
 
@@ -197,7 +274,7 @@ export const generateSummary = async (req, res) => {
   }
 }
 
-// Get bookmarks that need to be revisited today
+// Get bookmarks that need to be revisited today (with tags)
 export const getReviewToday = async (req, res) => {
   try {
     const userId = req.userId
@@ -211,7 +288,24 @@ export const getReviewToday = async (req, res) => {
       [userId]
     )
     
-    res.json(result.rows)
+    // 为每个书签获取其标签
+    const bookmarksWithTags = await Promise.all(
+      result.rows.map(async (bookmark) => {
+        const tagsResult = await pool.query(
+          `SELECT t.* FROM tags t
+           INNER JOIN bookmark_tags bt ON t.id = bt.tag_id
+           WHERE bt.bookmark_id = $1
+           ORDER BY t.name ASC`,
+          [bookmark.id]
+        )
+        return {
+          ...bookmark,
+          tags: tagsResult.rows
+        }
+      })
+    )
+    
+    res.json(bookmarksWithTags)
   } catch (error) {
     console.error('Failed to get revisit list:', error)
     res.status(500).json({ error: 'Failed to get revisit list' })

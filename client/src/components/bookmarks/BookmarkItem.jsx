@@ -1,10 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as bookmarksApi from '../../api/bookmarks'
 import BookmarkEditor from './BookmarkEditor'
 import SummaryBox from './SummaryBox'
+import TagManager from './TagManager'
 
 const BookmarkItem = ({ bookmark, onUpdate, onDelete, showReviewButton, onMarkReviewed }) => {
   const [isEditing, setIsEditing] = useState(false)
+  const [bookmarkTags, setBookmarkTags] = useState(bookmark.tags || [])
+
+  // 当 bookmark.tags 更新时同步本地状态
+  useEffect(() => {
+    setBookmarkTags(bookmark.tags || [])
+  }, [bookmark.tags])
+
+  const handleTagsUpdate = (updatedTags) => {
+    setBookmarkTags(updatedTags)
+    // 同时更新父组件的书签数据
+    if (onUpdate) {
+      onUpdate({ ...bookmark, tags: updatedTags })
+    }
+  }
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this bookmark?')) {
@@ -62,18 +77,34 @@ const BookmarkItem = ({ bookmark, onUpdate, onDelete, showReviewButton, onMarkRe
         </h3>
       </div>
       
-      {/* Revisit Badge */}
-      <div className="px-4 pb-3">
-        {needsRevisit && (
-          <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-200/60 backdrop-blur-sm text-orange-800 text-xs rounded-full border border-orange-300/50">
-            <span>🔔</span>
-            <span>Due for revisit</span>
-          </div>
-        )}
-        {bookmark.next_review_at && !needsRevisit && (
-          <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-200/60 backdrop-blur-sm text-green-800 text-xs rounded-full border border-green-300/50">
-            <span>📅</span>
-            <span className="truncate">Next: {formatDate(bookmark.next_review_at)}</span>
+      {/* Revisit Badge and Tags */}
+      <div className="px-4 pb-3 space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {needsRevisit && (
+            <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-200/60 backdrop-blur-sm text-orange-800 text-xs rounded-full border border-orange-300/50">
+              <span>🔔</span>
+              <span>Due for revisit</span>
+            </div>
+          )}
+          {bookmark.next_review_at && !needsRevisit && (
+            <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-200/60 backdrop-blur-sm text-green-800 text-xs rounded-full border border-green-300/50">
+              <span>📅</span>
+              <span className="truncate">Next: {formatDate(bookmark.next_review_at)}</span>
+            </div>
+          )}
+        </div>
+        
+        {/* 标签显示 */}
+        {bookmarkTags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {bookmarkTags.map(tag => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center px-2 py-0.5 bg-blue-100/70 backdrop-blur-sm text-blue-800 text-xs rounded-full border border-blue-200/50"
+              >
+                🏷️ {tag.name}
+              </span>
+            ))}
           </div>
         )}
       </div>
@@ -110,6 +141,15 @@ const BookmarkItem = ({ bookmark, onUpdate, onDelete, showReviewButton, onMarkRe
               isEditing={isEditing}
               setIsEditing={setIsEditing}
             />
+            
+            {/* 标签管理 */}
+            <div className="p-3 bg-blue-50/50 backdrop-blur-sm rounded-lg border border-blue-200/50">
+              <TagManager
+                bookmarkId={bookmark.id}
+                initialTags={bookmarkTags}
+                onTagsUpdate={handleTagsUpdate}
+              />
+            </div>
             
             {/* AI Summary Generation */}
             <SummaryBox bookmark={bookmark} onUpdate={onUpdate} />
